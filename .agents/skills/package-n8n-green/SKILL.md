@@ -1,0 +1,175 @@
+---
+name: package-n8n-green
+description: Provision and manage a self-hosted n8n workflow automation instance on one Vultr instance or one AWS EC2 instance, backed by a colocated self-hosted Neon (storage/compute-separated Postgres with layers and WAL in Cloudflare R2 or Amazon S3), behind Caddy TLS with an external task runner, using OpenTofu and Ansible. Use when asked to deploy, converge, inspect or tear down self-hosted n8n, to run n8n on Postgres rather than SQLite, to put n8n's database on object storage, or to work on a colors.yml for an n8n deployment.
+---
+
+# n8n Package Skill (Green)
+
+Provisions one Vultr instance or one AWS EC2 instance running n8n 2.36.9
+behind Caddy, with an external task runner, backed by a **colocated
+self-hosted Neon** storage tier, made of a storage broker, a pageserver, one
+safekeeper and a Postgres 17 compute node, whose layers and WAL live in Cloudflare R2 or
+Amazon S3.
+
+The Neon tier is not reimplemented here. This package SHA-pins
+[`getcolors/neon`](https://github.com/getcolors/neon) and renders its Ansible
+templates straight off the classpath, so there is no second copy of the storage
+tier to drift.
+
+## Install the launcher
+
+```sh
+npx skills add getcolors/n8n
+cp .agents/skills/package-n8n-green/green ./green
+chmod +x green
+```
+
+The root `green` is a **copy** of the payload, not a symlink. `npx skills
+update -p` rewrites the payload and leaves the copy alone, so copy it again
+after every update or the project keeps running the old pin.
+
+## Verbs
+
+```sh
+./green build              # render .colors/<profile>/ — no provider calls, no credentials
+./green create --dry-run   # walk the workflow, skip every side effect
+./green create             # converge for real
+./green delete             # guarded by compute-prevent-destroy
+```
+
+`build` and `--dry-run` work on a fresh checkout with an empty environment.
+Exit code 2 means validation failure and lists every problem at once.
+
+## Credentials
+
+Non-secret desired state lives in `colors.yml`. Every credential is a
+`COLORS_PAR_*` environment variable, conventionally in a gitignored
+`.envrc.private`:
+
+| Variable | For |
+|---|---|
+| `COLORS_PAR_VULTR_API_KEY` | instance, firewall, SSH key resource (`provider-compute: vultr`) |
+| `COLORS_PAR_CLOUDFLARE_API_TOKEN` | the DNS record; needs Zone:Read + DNS:Edit |
+| `COLORS_PAR_R2_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` | OpenTofu state (`provider-backend: r2`) |
+| `COLORS_PAR_NEON_R2_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` | Neon layers and WAL (falls back to the pair above) |
+| `COLORS_PAR_N8N_BACKUP_R2_*` | backups, scoped to the backup bucket alone |
+| `COLORS_PAR_N8N_ENCRYPTION_KEY` | **≥32 chars, not regenerable** — see below |
+
+Never export `COLORS_PAR_PROFILE`: it selects the deployment's remote state.
+
+On AWS (`provider-compute: aws`, `provider-backend: s3`) there is no provider
+key and no state pair: the compute library, the S3 state backend, the DNS
+stage's backend, and the storage stage all read the ambient AWS credential
+chain. The deployment's `.envrc` maps `COLORS_PAR_AWS_ACCESS_KEY_ID` and
+`COLORS_PAR_AWS_SECRET_ACCESS_KEY` onto `AWS_ACCESS_KEY_ID` and
+`AWS_SECRET_ACCESS_KEY`; the package also passes those overlays to every AWS
+subprocess itself. With `n8n-storage-managed: true` the `COLORS_PAR_NEON_R2_*`
+and `COLORS_PAR_N8N_BACKUP_R2_*` pairs are not set by the operator at all:
+the storage stage mints one bucket-scoped IAM access key per bucket and hands
+both to the converge in the Ansible subprocess environment only.
+
+### Three buckets, three credentials
+
+The package refuses to converge when one R2 credential would reach OpenTofu
+state, live Neon data and backups alike. Measured on a live host, that pair
+could list, write and **delete** in the state bucket and delete backup sets —
+and a backup a compromised host can erase is not a backup.
+
+Mint bucket-scoped R2 tokens (Object Read & Write on exactly one bucket each)
+for `COLORS_PAR_NEON_R2_*` and `COLORS_PAR_N8N_BACKUP_R2_*`; `COLORS_PAR_R2_*`
+then has one job, OpenTofu state, and never leaves your workstation. A first
+converge that predates those tokens can set
+`r2-credential-sharing: shared-accepted` — but only as a deliberate line in
+committed desired state, visible in a diff, and the acceptance gate then
+reports `RISK` on every run rather than a quiet skip.
+
+R2 has no write-only mode, so even a scoped backup credential can delete what
+it writes. Bucket versioning or an immutability policy closes that, and is a
+Cloudflare-side setting rather than anything this package can converge.
+
+The backup bucket is its own rclone remote on the host, with its own endpoint
+and region (`n8n-backup-r2-endpoint` and `n8n-backup-r2-region`, defaulting to
+the Neon bucket's). The play installs the backup pair at
+`/etc/colors/backup-r2.env` and refuses to converge when it is empty, unless
+`shared-accepted` is recorded, in which case the backup remote uses the Neon
+pair and the smoke gate reports `RISK` every run. When the pair is its own,
+the gate lists the Neon bucket with it and fails the converge if the listing
+succeeds.
+
+### AWS with managed S3 storage
+
+Set `provider-compute: aws`, `provider-backend: s3`, `s3-bucket-mode:
+managed`, and `n8n-storage-managed: true`, with the `aws-*` keys from the
+configuration reference and the regional S3 endpoint in both `neon-r2-endpoint`
+and `n8n-backup-r2-endpoint`. Create then runs compute, the `n8n-storage`
+stage (two buckets, two scoped IAM users), DNS, the SSH alias, the converge,
+and acceptance. Delete stops the host, removes the alias and the record,
+empties and removes the two buckets and their IAM users, destroys compute,
+and finalizes the state bucket last. The destruction override therefore
+authorizes deleting the Neon data and every backup set as well as the
+machine; on R2 desired state, delete leaves every bucket alone.
+
+The database role password, the n8n owner password and the task-runner token are
+**generated on the server** and are not operator credentials; read them over SSH
+from `/etc/neon/secrets/` and `/etc/n8n/secrets/`.
+
+### The encryption key outlives the host
+
+`N8N_ENCRYPTION_KEY` encrypts every credential n8n stores. n8n writes it into
+`/home/node/.n8n/config` on **first boot** and refuses to start ever after if
+the environment disagrees — so one bad first boot poisons the data directory,
+and the error appears on the *next* boot rather than the one that caused it.
+Keep a copy somewhere that is not this machine before the first converge.
+
+## What convergence guarantees
+
+Acceptance gates run on every converge and fail it if they fail:
+
+- the Neon tenant and timeline in desired state are the ones attached
+- pageserver objects exist in R2, and a **new** safekeeper segment appears after
+  `pg_switch_wal()` — historical objects cannot satisfy the gate
+- a workflow created through the public API is read back **out of Neon**
+- `DB_TYPE=postgresdb` in the running container and no SQLite file on disk
+- the migration table matches the pinned image
+- liveness *and* readiness (they differ; readiness is the one that gates on the database)
+- the origin certificate, and that the origin refuses non-Cloudflare traffic
+- the generated production webhook URL
+- the owner account is claimed — before the public name ever resolves
+- a Code node **executes** on the external runner
+- sshd rejects password and root-password authentication
+
+Drills that are not part of every converge:
+
+```sh
+ssh <profile> /opt/neon/n8n-smoke.sh          # the gates above
+ssh <profile> /opt/neon/n8n-soak.sh           # C1 load, declared thresholds
+ssh <profile> /opt/neon/n8n-rehearsal.sh      # R3 restore into an isolated stack
+ssh <profile> /opt/neon/n8n-prune-drill.sh    # C2 retention, isolated
+ssh <profile> /opt/neon/n8n-restart-drill.sh recreate
+```
+
+## Recovery
+
+Neon streams WAL to R2 continuously, but a **rebuilt safekeeper does not recover
+its offloaded WAL** — the walproposer bootstraps it from the compute basebackup.
+So a destroyed host falls back to the logical backup set, and the backup
+*interval* is the real RPO. It defaults to six hours, not nightly.
+
+| Failure | Recovers from | RPO |
+|---|---|---|
+| pageserver local state lost | R2 layers + safekeeper replay | ~0 |
+| compute lost | recreate from pageserver | ~0 |
+| **whole host lost** | the backup set in R2 | one backup interval |
+
+`n8n-rehearsal.sh` proves the whole path: restore both artifacts into an
+isolated scratch stack, boot the pinned image, log in, and execute a workflow
+whose node carries a stored credential — because a credential's value cannot be
+read back to test decryption, only used.
+
+## Configuration reference
+
+See [references/configuration.md](references/configuration.md).
+
+Compute lifecycle and remote state are delegated to `colors-compute`; the package keeps its Neon+n8n application templates, DNS stage, storage stage, credential-scope checks, and acceptance gates. Compute runs on Vultr or AWS, requires R2 or S3, and owns `<profile>/compute/{shared,nodes/0}.tfstate` plus a journal. Legacy `<profile>/n8n-infrastructure.tfstate` is refused for explicit migration. The package owns its locked SSH alias updater; it removes the alias before compute destruction and writes IdentityFile only for managed keys. External private paths are passed explicitly to Ansible and acceptance SSH. Build and dry-run do not read local SSH files.
+
+Validated retired compute prevents remote Ansible during delete even when caller input retains a stale IP or private-key path. Remaining application and local cleanup keeps its existing ordering. Normal creation still converges the application.

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Desired state for self-hosted n8n on one AWS EC2 instance, backed by a colocated self-hosted Neon whose layers, WAL and backups live in S3 buckets the deployment owns.">
+  <title>n8n-aws — getcolors deployment</title>
+  <style>
+    :root{color-scheme:light;--ink:#1f2328;--muted:#59636e;--line:#d0d7de;--soft:#f6f8fa;--blue:#0969da;--green:#1a7f37}*{box-sizing:border-box}body{margin:0;color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:920px;margin:auto;padding:64px 28px 100px}h1{font-size:48px;line-height:1.05;margin:0}h2{margin-top:54px;padding-bottom:8px;border-bottom:1px solid var(--line)}.lead{font-size:20px;color:var(--muted);max-width:790px}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}pre{padding:18px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--soft)}:not(pre)>code{padding:.12em .35em;border-radius:5px;background:var(--soft)}a{color:var(--blue)}.eyebrow{color:var(--green);font-weight:700;letter-spacing:.08em}.callout{padding:16px 18px;border-left:4px solid var(--green);background:#dafbe1}.warn{padding:16px 18px;border-left:4px solid #bf8700;background:#fff8c5}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}@media(max-width:650px){main{padding-top:38px}h1{font-size:36px}}
+  </style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4VKP1WY4QJ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-4VKP1WY4QJ',{page_title:'n8n-aws — getcolors deployment'});</script>
+<script src="https://rybbit.getcolors.ai/api/script.js" data-site-id="9fb9c41a6d49" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">DEPLOYMENT · AWS · N8N ON SELF-HOSTED NEON</p>
+  <h1>n8n-aws</h1>
+  <p class="lead">Desired state for one self-hosted n8n server on an EC2 instance in <code>us-east-1a</code>: n8n behind Caddy with an external task runner, on a colocated self-hosted Neon whose layers, WAL and six-hourly backups live in S3 buckets this deployment creates and deletes.</p>
+
+  <div class="callout"><strong>Every bucket is an owned resource.</strong> <code>create</code> makes the OpenTofu state bucket, the Neon data bucket and the backup bucket, mints one bucket-scoped IAM key for each, and <code>delete</code> removes all of them again with their contents. Nothing is prepared by hand in the AWS console, and the storage stage refuses to adopt a bucket that already exists.</div>
+
+  <h2>What is tracked here</h2>
+  <p><code>colors.yml</code> (the only editable desired state), the installed <a href="https://github.com/getcolors/n8n">n8n Package Skill</a> payload and lockfile, a root launcher copied from that payload, toolchain files, and documentation. Credentials live in gitignored <code>.envrc.private</code>; generated output in <code>.colors/</code> is never committed.</p>
+
+  <h2>Lifecycle</h2>
+  <pre><code>direnv allow               # once, after cloning
+./green build              # render .colors/n8n-aws/ — contacts nothing
+./green create --dry-run   # walk the workflow, no side effects
+./green create             # converge (requires authorization)
+./green delete             # guarded and destructive</code></pre>
+
+  <h2>Ownership</h2>
+  <table>
+    <tr><th>Resource</th><th>Owner</th></tr>
+    <tr><td>State bucket <code>n8n-aws-state-…</code></td><td><code>colors-compute</code>, <code>s3-bucket-mode: managed</code>; created first, removed last</td></tr>
+    <tr><td>Neon bucket and backup bucket, one IAM user and key each</td><td>the package's <code>n8n-storage</code> stage, <code>n8n-storage-managed: true</code></td></tr>
+    <tr><td>VPC, subnet, security group, instance, machine keypair</td><td><code>colors-compute</code></td></tr>
+    <tr><td><code>n8n-aws.bigconfig.online</code>, proxied</td><td>the package's DNS stage</td></tr>
+  </table>
+
+  <h2>Credentials</h2>
+  <p>Three operator credentials: the AWS pair (mapped onto the ambient credential chain by <code>.envrc</code>), a zone-scoped Cloudflare token, and the n8n encryption key. No bucket credentials: the storage stage mints scoped keys from OpenTofu output and hands them to Ansible in memory.</p>
+
+  <div class="warn"><strong>The encryption key outlives the host.</strong> n8n writes it into its settings file on first boot and refuses to start if the environment later disagrees. Keep a copy somewhere that is not this machine.</div>
+
+  <p><a href="https://github.com/getcolors/n8n-aws">Source on GitHub</a> · <a href="https://github.com/getcolors/n8n">The n8n Package Skill</a> · <a href="https://github.com/getcolors/skills/tree/main/n8n-single-node">The n8n-single-node Context Skill</a></p>
+</main></body>
+</html>

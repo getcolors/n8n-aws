@@ -1,0 +1,12 @@
+audit after delete, 2026-09-11T07:21:48Z
+buckets: once-dev-251213589273-eu-west-1	once-pocketbase-251213589273-eu-west-1	tf-state-251213589273-eu-west-1
+n8n-aws buckets: 0
+instances (non-terminated): 0
+vpcs: 172.31.0.0/16
+keypairs: 0
+security groups non-default: 0
+volumes: 0
+iam users: colors
+dns n8n-aws records: []
+no ~/.ssh/n8n-aws key
+ssh alias blocks: 0

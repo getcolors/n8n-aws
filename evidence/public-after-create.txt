@@ -1,0 +1,10 @@
+public checks, 2026-09-11T06:52:16Z
+dns: [{"type":"A","content":"54.234.176.151","proxied":true}]
+origin: 54.234.176.151
+resolves to: 104.21.89.93 172.67.139.183 
+https via cloudflare /healthz/readiness: 200 server=cloudflare
+https via cloudflare /rest/settings: 200
+origin direct 443 from workstation (expect refused/timeout): 000 curl_exit=28
+origin direct 80: 000 curl_exit=28
+origin 22 from this workstation: open
+cert: issuer=C = US, O = Let's Encrypt, CN = YE2 notAfter=Oct 25 18:14:30 2026 GMT 

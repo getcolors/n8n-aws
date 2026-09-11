@@ -1,0 +1,7 @@
+soak: 2930 executions, 0 failed, 10 workflows
+sql round-trip p95=120ms p99=153ms
+executions completed: 2930
+host memory 12% disk 28%
+R2 objects under the deployment prefix: 19 -> 22
+soak: passed
+exit=0 elapsed=304s

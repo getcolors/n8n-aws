@@ -1,0 +1,7 @@
+== C3: restart drill (recreate) ==
+  ok    C3a witness workflow created
+  ok    C3b the whole stack returned healthy with no manual sequencing
+  ok    C3c the witness survived the recreate
+  ok    C3d a Code node still executes on the runner after the recreate
+restart drill (recreate): passed
+exit=0 elapsed=51s

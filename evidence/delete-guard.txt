@@ -1,0 +1,5 @@
+delete guard without override:
+>>> :n8n/start (delete)
+<<< :n8n/start (11ms)
+compute destruction is protected; set COLORS_PAR_COMPUTE_PREVENT_DESTROY=false to delete
+guard exit=2

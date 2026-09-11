@@ -1,0 +1,9 @@
+== C2: pruning drill (isolated) ==
+  ok    C2a scratch stack healthy with retention max-count=5
+  executions after load: 528
+  ok    C2b generated 528 executions, past the cap of 5
+  executions after pruning: 5
+  ok    C2c pruning reclaimed rows down to the cap (5)
+  ok    C2d the execution table is not growing monotonically
+prune drill: passed
+exit=0 elapsed=151s

@@ -1,0 +1,14 @@
+local ssh ownership after create, 2026-09-11T06:54:38Z
+# BEGIN n8n-aws ANSIBLE MANAGED BLOCK
+Host n8n-aws
+    HostName 54.234.176.151
+    User ubuntu
+    Port 22
+    IdentityFile ~/.ssh/n8n-aws
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    ForwardAgent no
+# END n8n-aws ANSIBLE MANAGED BLOCK
+-rw------- 1 ubuntu ubuntu 419 Sep 11 08:40 /home/ubuntu/.ssh/n8n-aws
+-rw------- 1 ubuntu ubuntu 107 Sep 11 08:40 /home/ubuntu/.ssh/n8n-aws.pub
+pub fingerprint: SHA256:gXQiKHj8/UYLkHNf2RvcJlTZJg+jl6eoP5VfRhNknoU

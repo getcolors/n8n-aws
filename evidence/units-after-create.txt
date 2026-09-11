@@ -1,0 +1,6 @@
+n8n-backup.service inactive dead
+n8n-monitor.service inactive dead
+n8n-backup.timer active waiting
+n8n-monitor.timer active waiting
+n8n-monitor.service next=Fri 2026-09-11
+n8n-backup.service next=Fri 2026-09-11

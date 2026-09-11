@@ -1,0 +1,10 @@
+audit before create, 2026-09-11T06:39:44Z
+buckets: once-dev-251213589273-eu-west-1	once-pocketbase-251213589273-eu-west-1	tf-state-251213589273-eu-west-1
+instances: 
+vpcs: 172.31.0.0/16
+keypairs: 
+iam users: colors
+dns n8n-aws records: []
+no ~/.ssh/n8n-aws key
+0
+no ssh alias

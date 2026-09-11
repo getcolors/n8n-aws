@@ -1,0 +1,14 @@
+== R3: restore rehearsal ==
+  seeded: {"workflowId":"vDxqAHnAJBnGW0Nh","credentialId":"pfk3i0pW9wLx3ouT"}
+  backup set: 20260911T065945Z
+  ok    R3a dump matches its manifest checksum
+  ok    R3b data directory matches its manifest checksum
+  ok    R3c the dump restored into the scratch database (130 tables)
+  ok    R3d the pinned image boots READY against the restored pair
+  verify: {"login":true,"workflow":true,"credential":true,"binary":true,"credentialDetail":"a node using the credential executed successfully","executionCount":2}
+  ok    R3d an operator can log in to the restored instance
+  ok    R3e the seeded workflow is present
+  ok    R3f a stored credential DECRYPTS with the operator key
+  ok    R3g a binary payload from the restored data dir is readable
+rehearsal: passed
+exit=0 elapsed=56s

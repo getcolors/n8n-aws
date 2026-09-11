@@ -1,0 +1,7 @@
+>>> :n8n/start (delete)
+<<< :n8n/start (9ms)
+>>> :n8n/load (delete)
+<<< :n8n/load (1070ms)
+>>> :n8n/backend-finalize (delete)
+<<< :n8n/backend-finalize (2098ms)
+exit=0 elapsed=4s

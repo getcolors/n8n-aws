@@ -1,0 +1,25 @@
+storage audit after create, 2026-09-11T06:52:55Z
+== n8n-aws-state-251213589273-us-east-1
+  tags: [{"Key":"colors:purpose","Value":"managed-backend"},{"Key":"colors:owner","Value":"251213589273"},{"Key":"colors:profile","Value":"n8n-aws"}]
+  public-access-block: {"BlockPublicAcls":true,"IgnorePublicAcls":true,"BlockPublicPolicy":true,"RestrictPublicBuckets":true}
+  sse: AES256
+  objects: None ; top prefixes: _colors/backend-owner.json n8n-aws/compute n8n-aws/n8n-dns.tfstate n8n-aws/n8n-storage.tfstate 
+== n8n-aws-neon-251213589273-us-east-1
+  tags: [{"Key":"colors:owner","Value":"n8n-storage"},{"Key":"colors:profile","Value":"n8n-aws"}]
+  public-access-block: {"BlockPublicAcls":true,"IgnorePublicAcls":true,"BlockPublicPolicy":true,"RestrictPublicBuckets":true}
+  sse: AES256
+  objects: None ; top prefixes: n8n-aws/data 
+== n8n-aws-backup-251213589273-us-east-1
+  tags: [{"Key":"colors:owner","Value":"n8n-storage"},{"Key":"colors:profile","Value":"n8n-aws"}]
+  public-access-block: {"BlockPublicAcls":true,"IgnorePublicAcls":true,"BlockPublicPolicy":true,"RestrictPublicBuckets":true}
+  sse: AES256
+  objects: None ; top prefixes: None 
+== IAM
+  colors policies= keys=Active
+  n8n-aws-storage-backup policies=n8n-bucket keys=Active
+  n8n-aws-storage-neon policies=n8n-bucket keys=Active
+  n8n-aws-storage-backup policy resources: [["arn:aws:s3:::n8n-aws-backup-251213589273-us-east-1"],["arn:aws:s3:::n8n-aws-backup-251213589273-us-east-1/*"]]
+== compute
+{"id":"i-0795bb42f1e4d27c8","type":"t3.xlarge","az":"us-east-1a","ip":"54.234.176.151","key":"n8n-aws","vol":"vol-06dc00178ec02b02f"}
+{"size":60,"type":"gp3","encrypted":true}
+  sg ingress: [{"p":80,"n":15,"v6":0},{"p":22,"n":1,"v6":0},{"p":443,"n":15,"v6":0},{"p":null,"n":0,"v6":0}]

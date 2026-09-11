@@ -1,0 +1,4 @@
+n8n-monitor.service: Deactivated successfully.
+Finished n8n-monitor.service - n8n health check and dead-man heartbeat.
+n8n-monitor.service: Consumed 3.320s CPU time.
+heartbeat

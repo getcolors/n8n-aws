@@ -1,0 +1,23 @@
+== A: storage tier ==
+  ok    A1 tenant bf0cce0dc5e30b9678b32ed2ecd90587 attached
+  ok    A2a pageserver objects present (18)
+  ok    A2b new safekeeper segment after pg_switch_wal()
+  ok    A3 workflow kC9yVI87AAFovNNE created via API, read back from Neon
+  ok    A3b DB_TYPE=postgresdb in the running container
+  ok    A3c no SQLite database in the data directory
+  ok    A4 migrations table has 246 applied entries
+  ok    A4b no migration errors from the current container
+== B: application tier ==
+  ok    B1a n8n /healthz (liveness)
+  ok    B1b n8n /healthz/readiness (database)
+  ok    B2 origin serves a valid certificate for n8n-aws.bigconfig.online
+  ok    B5 N8N_WEBHOOK_URL is https://n8n-aws.bigconfig.online/
+  ok    B5b deprecated WEBHOOK_URL absent
+  ok    B4 owner account claimed
+  ok    B6 Code node executed on the external runner (success)
+  ok    B8a password authentication disabled
+  ok    B8b root password login disabled
+== R: recovery ==
+  ok    R2 backup credential is scoped away from live data
+acceptance: all gates passed
+exit=0 elapsed=27s

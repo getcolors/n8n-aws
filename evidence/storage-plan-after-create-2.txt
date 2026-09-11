@@ -1,0 +1,31 @@
+storage plan after second create, 2026-09-11T07:09:29Z
+  ~ update in-place (current -> planned)
+  # aws_s3_bucket_server_side_encryption_configuration.application["backup"] will be updated in-place
+  ~ resource "aws_s3_bucket_server_side_encryption_configuration" "application" {
+  # aws_s3_bucket_server_side_encryption_configuration.application["neon"] will be updated in-place
+  ~ resource "aws_s3_bucket_server_side_encryption_configuration" "application" {
+Plan: 0 to add, 2 to change, 0 to destroy.
+plan exit=2 (0 no changes, 2 changes)
+  # aws_s3_bucket_server_side_encryption_configuration.application["backup"] will be updated in-place
+  ~ resource "aws_s3_bucket_server_side_encryption_configuration" "application" {
+        id     = "n8n-aws-backup-251213589273-us-east-1"
+        # (2 unchanged attributes hidden)
+
+      - rule {
+          - blocked_encryption_types = [
+              - "SSE-C",
+            ] -> null
+          - bucket_key_enabled       = false -> null
+
+          - apply_server_side_encryption_by_default {
+              - sse_algorithm = "AES256" -> null
+            }
+        }
+      + rule {
+          + blocked_encryption_types = []
+
+          + apply_server_side_encryption_by_default {
+              + sse_algorithm = "AES256"
+            }
+        }
+    }

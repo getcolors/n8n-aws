@@ -1,0 +1,9 @@
+Starting n8n-backup.service - n8n backup set (logical dump + data directory + manifest)...
+ Container neon-n8n-runners-1  Stopping
+ Container neon-n8n-runners-1  Stopped
+ Container neon-n8n-1  Stopping
+ Container neon-n8n-1  Stopped
+backup set 20260911T065341Z uploaded
+n8n-backup.service: Deactivated successfully.
+Finished n8n-backup.service - n8n backup set (logical dump + data directory + manifest).
+exit=0 elapsed=15s
